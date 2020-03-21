@@ -1,16 +1,31 @@
 import sys
 from setuptools import setup, find_packages
-from umr_telegram_driver.__VERSION__ import __VERSION__
+import pathlib
+import re
+
+WORK_DIR = pathlib.Path(__file__).parent
 
 if sys.version_info < (3, 7):
     raise Exception("Python 3.7 or higher is required. Your version is %s." % sys.version)
 
 long_description = open('README.md', encoding="utf-8").read()
 
+def get_version():
+    """
+    Read version
+    :return: str
+    """
+    WORK_DIR = pathlib.Path(__file__).parent
+    txt = (WORK_DIR / 'umr_telegram_driver' / '__init__.py').read_text('utf-8')
+    try:
+        return re.findall(r"^__VERSION__ = '([^']+)'\r?$", txt, re.M)[0]
+    except IndexError:
+        raise RuntimeError('Unable to determine version.')
+
 setup(
     name='umr_telegram_driver',
     packages=find_packages(include=['umr_telegram_driver', 'umr_telegram_driver.*']),
-    version=__VERSION__,
+    version=get_version(),
     description='UMR Telegram Driver',
     long_description=long_description,
     author='Curtis Jiang',
