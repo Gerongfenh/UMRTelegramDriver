@@ -10,6 +10,7 @@ if sys.version_info < (3, 7):
 
 long_description = open('README.md', encoding="utf-8").read()
 
+
 def get_version():
     """
     Read version
@@ -17,7 +18,7 @@ def get_version():
     """
     txt = (WORK_DIR / 'umr_telegram_driver' / '__init__.py').read_text('utf-8')
     try:
-        return re.findall(r"^__VERSION__ = '(.*)'\r?$", txt, re.M)[0]
+        return re.findall(r"^__VERSION__ = (.*)[\r\n]?$", txt, re.M)[0]
     except IndexError:
         raise RuntimeError('Unable to determine version.')
 
