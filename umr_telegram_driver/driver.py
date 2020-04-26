@@ -1,6 +1,7 @@
 import threading
 import asyncio
-from typing import Dict, Union, List
+from typing import Dict, Union, List, Optional
+from typing_extensions import Literal
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import ContentType
 from unified_message_relay.Core.UMRType import UnifiedMessage, MessageEntity, ChatAttribute, ChatType, EntityType
@@ -8,27 +9,34 @@ from unified_message_relay.Core import UMRDriver
 from unified_message_relay.Core import UMRLogging
 from unified_message_relay.Core import UMRConfig
 from unified_message_relay.Core.UMRMessageRelation import set_ingress_message_id, set_egress_message_id
-from unified_message_relay.Util.Helper import check_attribute, unparse_entities_to_html
+from unified_message_relay.Util.Helper import unparse_entities_to_html
+
+
+class TelegramDriverConfig(UMRConfig.BaseDriverConfig):
+    Base: Literal['Telegram']
+    BotToken: str
+    HTTPProxy: Optional[str]
+
+
+UMRConfig.register_driver_config(TelegramDriverConfig)
 
 
 class TelegramDriver(UMRDriver.BaseDriverMixin):
     def __init__(self, name):
+        super().__init__(name)
+
         self.name = name
 
         # Initialize bot and dispatcher
         self.logger = UMRLogging.get_logger(f'UMRDriver.{self.name}')
         self.logger.debug(f'Started initialization for {self.name}')
 
-        attributes = [
-            ('BotToken', False, None)
-        ]
-        self.config = UMRConfig.config['Driver'][self.name]
-        check_attribute(self.config, attributes, self.logger)
-        self.bot_user_id = int(self.config['BotToken'].split(':')[0])
+        self.config: TelegramDriverConfig = UMRConfig.config.Driver[self.name]
+        self.bot_user_id = int(self.config.BotToken.split(':')[0])
         self.image_file_id: Dict[str, str] = dict()  # mapping from filename to existing file id
         self.loop = asyncio.new_event_loop()
         self.loop.set_exception_handler(self.handle_exception)
-        self.bot = Bot(token=self.config['BotToken'], loop=self.loop)
+        self.bot = Bot(token=self.config.BotToken, loop=self.loop, proxy=self.config.HTTPProxy)
         self.dp = Dispatcher(self.bot)
 
     def start(self):
@@ -54,7 +62,7 @@ class TelegramDriver(UMRDriver.BaseDriverMixin):
                 message_entities = self.parse_entities(message)
 
                 unified_message = UnifiedMessage(platform=self.name,
-                                                 message=text,
+                                                 text=text,
                                                  message_entities=message_entities,
                                                  chat_id=message.chat.id,
                                                  chat_type=_chat_type,
@@ -81,7 +89,7 @@ class TelegramDriver(UMRDriver.BaseDriverMixin):
                     unified_message.image = url
                     unified_message.file_id = file_id
                 else:
-                    unified_message.message = '[Unsupported message]'
+                    unified_message.text = '[Unsupported message]'
                 await self.receive(unified_message)
             executor.start_polling(self.dp, skip_updates=True, loop=self.loop)
 
@@ -209,7 +217,7 @@ class TelegramDriver(UMRDriver.BaseDriverMixin):
         :return:
         """
         file: types.File = await self.bot.get_file(file_id)
-        url = f'https://api.telegram.org/file/bot{self.config["BotToken"]}/{file.file_path}'
+        url = f'https://api.telegram.org/file/bot{self.config.BotToken}/{file.file_path}'
         perm_id = file.file_unique_id
         return url, perm_id
 
