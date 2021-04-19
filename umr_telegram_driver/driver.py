@@ -116,7 +116,7 @@ class TelegramDriver(UMRDriver.BaseDriverMixin):
         self.logger.debug('begin processing message')
         await self.bot.send_chat_action(to_chat, types.chat.ChatActions.TYPING)
         if message.chat_attrs.name:
-            text = '<b>' + message.chat_attrs.name + '</b>: '
+            text = '<b>' + message.chat_attrs.name + '</b>(' + str(message.from_user.id) + '): '
         else:
             text = ''
 
