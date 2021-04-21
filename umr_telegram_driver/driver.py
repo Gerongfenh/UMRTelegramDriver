@@ -135,29 +135,29 @@ class TelegramDriver(UMRDriver.BaseDriverMixin):
                 self.logger.debug(f'file id for {message.image} found, sending file id')
                 if message.image.endswith('gif'):
                     tg_message = await self.bot.send_animation(to_chat, self.image_file_id[message.image], caption=text,
-                                                               parse_mode=types.message.ParseMode.HTML,
+                                                               parse_mode=types.message.ParseMode.HTML, disable_notification=True,
                                                                reply_to_message_id=reply_to_message_id)
                 else:
                     tg_message = await self.bot.send_photo(to_chat, self.image_file_id[message.image], caption=text,
-                                                           parse_mode=types.message.ParseMode.HTML,
+                                                           parse_mode=types.message.ParseMode.HTML, disable_notification=True,
                                                            reply_to_message_id=reply_to_message_id)
             else:
                 self.logger.debug(f'file id for {message.image} not found, sending image file')
                 if message.image.endswith('gif'):
                     tg_message = await self.bot.send_animation(to_chat, types.input_file.InputFile(message.image),
                                                                caption=text,
-                                                               parse_mode=types.message.ParseMode.HTML,
+                                                               parse_mode=types.message.ParseMode.HTML, disable_notification=True,
                                                                reply_to_message_id=reply_to_message_id)
                     self.image_file_id[message.image] = tg_message.document.file_id
                 else:
                     tg_message = await self.bot.send_photo(to_chat, types.input_file.InputFile(message.image),
                                                            caption=text,
-                                                           parse_mode=types.message.ParseMode.HTML,
+                                                           parse_mode=types.message.ParseMode.HTML, disable_notification=True,
                                                            reply_to_message_id=reply_to_message_id)
                     self.image_file_id[message.image] = tg_message.photo[-1].file_id
         else:
             self.logger.debug('finished processing message, ready to send')
-            tg_message = await self.bot.send_message(to_chat, text, parse_mode=types.message.ParseMode.HTML,
+            tg_message = await self.bot.send_message(to_chat, text, parse_mode=types.message.ParseMode.HTML, disable_notification=True,
                                                      reply_to_message_id=reply_to_message_id)
 
         if message.chat_attrs:
